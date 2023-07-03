@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from './pagination';
-import { Button, Container, Row, Col, Nav, Form } from 'react-bootstrap';
+import { Button, Container, Row, Col, Nav, Form, Modal } from 'react-bootstrap';
 import '../css/boardList.css';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -28,6 +28,9 @@ function BoardList() {
   const [page, setPage] = useState(pageParam ? Number(pageParam) : 0);
   const [hasMore, setHasMore] = useState(true);
   const { page: pageParam } = useParams();
+    const [userLocationList, setUserLocationList] = useState([]);
+    const [searchArea, setSearchArea] = useState('');
+    const [showUserLocationModal,setShowUserLocationModal] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -50,6 +53,11 @@ function BoardList() {
     fetchData();
   };
 
+     const handleAreaSearch = (e) => {
+       const areaValue = e.target.value;
+       setSearchArea(areaValue);
+       setPage(0);
+     };
 
 
   const handleSortByChange = (e) => {
@@ -121,56 +129,61 @@ function BoardList() {
     fetchData();
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [subCategoryId, searchQuery, minPrice, maxPrice, sortBy]);
+    useEffect(() => {
+            console.log("setSearchArea?", searchArea);
+           fetchData();
+    }, [subCategoryId, searchQuery, minPrice, maxPrice, sortBy, searchArea]);
 
+ const fetchData = async () => {
+   let endpoint = '/api/boardList';
+   if (searchArea) {
+     endpoint += `/searchArea/${searchArea}`
+   }
+   if (subCategoryId) {
+     endpoint += `/category/${subCategoryId}`;
+   }
+   if (searchQuery) {
+     endpoint += `/searchQuery/${searchQuery}`;
+   }
+   if (minPrice) {
+     endpoint += `/minPrice/${minPrice}`;
+   }
+   if (maxPrice) {
+     endpoint += `/maxPrice/${maxPrice}`;
+   }
+   if (sortBy) {
+     endpoint += `/sortBy/${sortBy}`;
+   }
 
+   endpoint += `/page/${page}`;
 
-  const fetchData = async () => {
-    let endpoint = '/api/boardList';
+   console.log(endpoint);
+   await axios
+     .get(endpoint)
+     .then((response) => {
+       if (page === 0 && endpoint != `/api/boardList/page/0`) {
+         // If it's the first page, reset the tradeBoards state
+         setTradeBoards(response.data.tradeBoards);
+       } else {
+         // If it's not the first page, append the new tradeBoards to the existing state
+         setTradeBoards((prevBoards) => [...prevBoards, ...response.data.tradeBoards]);
+       }
+       let top = [...response.data.top];
+       let sub = [...response.data.sub];
+       let locations = [...response.data.userLocationList];
+       setTopCategories(top);
+       setSubCategories(sub);
+       setUserLocationList(locations);
 
-    if (subCategoryId) {
-      endpoint += `/category/${subCategoryId}`;
-    }
-    if (searchQuery) {
-      endpoint += `/searchQuery/${searchQuery}`;
-    }
-    if (minPrice) {
-      endpoint += `/minPrice/${minPrice}`;
-    }
-    if (maxPrice) {
-      endpoint += `/maxPrice/${maxPrice}`;
-    }
-    if (sortBy) {
-      endpoint += `/sortBy/${sortBy}`;
-    }
-    endpoint += `/page/${page}`;
-
-    console.log(endpoint);
-    await axios
-      .get(endpoint)
-      .then((response) => {
-        if (page === 0 && endpoint != `/api/boardList/page/0`) {
-          // If it's the first page, reset the tradeBoards state
-          setTradeBoards(response.data.tradeBoards);
-        } else {
-          // If it's not the first page, append the new tradeBoards to the existing state
-          setTradeBoards((prevBoards) => [...prevBoards, ...response.data.tradeBoards]);
-        }
-        let top = [...response.data.top];
-        let sub = [...response.data.sub];
-        setTopCategories(top);
-        setSubCategories(sub);
-
-        const nextPage = page + 1; // Calculate the next page
-        setPage(nextPage); // Update the page state to the next page
-        setHasMore(response.data.hasNext);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
-  };
+       console.log(userLocationList);
+       const nextPage = page + 1; // Calculate the next page
+       setPage(nextPage); // Update the page state to the next page
+       setHasMore(response.data.hasNext);
+     })
+     .catch((error) => {
+       console.error('Error fetching data:', error);
+     });
+ };
 
 
 
@@ -256,19 +269,18 @@ const fetchDataWithDelay = () => {
     }
   };
 
+   const setShowUserLocationList = () => {
+          setShowUserLocationModal(true);
+      }
+
+      const handleUserLocationCloseModal = () => {
+          setShowUserLocationModal(false);
+      }
+
+
 
   return (
     <Container fluid>
-      <form onSubmit={handleSearch}>
-        <Row className="d-flex justify-content-center">
-          <Col sm={2}>
-            <input type="text" name="searchQuery" value={searchQueryInput} onChange={(e) => setSearchQueryInput(e.target.value)} />
-            <button type="submit">
-              <BiSearch />
-            </button>
-          </Col>
-        </Row>
-      </form>
       <Row className="justify-content-start filtertext">
         <div>
           <p>필터</p>
@@ -285,9 +297,18 @@ const fetchDataWithDelay = () => {
           ))}
         </div>
       </Row>
-
+      <Row className="justify-content-start">
+        <Col md={2}>
+         <Form.Select className="searchArea" onChange={handleAreaSearch}>
+           {userLocationList.map((loc) => {
+             const addressParts = loc.address.split(" ");
+             const dong = addressParts[addressParts.length - 1]; // Extract the last part as the "동" information
+             return <option value={loc.address}>{dong}</option>;
+           })}
+         </Form.Select>
+        </Col>
+      </Row>
       <Row className="justify-content-end">
-
         <Col md={3}>
           <Form.Select className="sortBy" onChange={handleSortByChange}>
             <option value="">정렬 방식</option>
@@ -295,12 +316,27 @@ const fetchDataWithDelay = () => {
             <option value="priceAsc">낮은 가격순</option>
             <option value="priceDesc">높은 가격순</option>
           </Form.Select>
-        </Col>
-         <Col xs="auto">
-                 <a href="/writeForm" className="ml-auto"><Button>글쓰기</Button></a>
-               </Col>
+          <form onSubmit={handleSearch}>
+              <Row className="d-flex ">
+                <Col sm={2}>
+                   <input type="text" className="search-input" name="searchQuery" value={searchQueryInput} onChange={(e) => setSearchQueryInput(e.target.value)} />
+                     <button type="submit">
+                        <BiSearch />
+                     </button>
+                </Col>
+              </Row>
+           </form>
+         </Col>
       </Row>
+
       <Row className="justify-content-end">
+       <Col xs="auto">
+                       <a href="/writeForm" className="ml-auto">
+                           <Button className="writebutton">
+                               <p className="writebuttontext">글쓰기</p>
+                           </Button>
+                       </a>
+                     </Col>
         <Col md={3}>
          <Form onSubmit={searchByPrice} className="d-flex align-items-center m-filter">
            <Form.Group className="mr-2">
@@ -387,7 +423,7 @@ const fetchDataWithDelay = () => {
                           </Col>
                         </Row>
                         <div className="sell-board-ul">
-                          <span> {board.userLocation.address}</span>
+                          <span> {board.sellArea}</span>
                         </div>
                       </Nav.Link>
                     </div>
@@ -400,6 +436,37 @@ const fetchDataWithDelay = () => {
           )}
         </Col>
       </Row>
+        <Modal show={showUserLocationModal} onHide={handleUserLocationCloseModal} backdrop="static" keyboard={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>고객 위치 인증 리스트</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Row className="userLocationList">
+                <ul className="list-group userLocation-list">
+                  {userLocationList.map((result, index) => (
+                    <li key={index} className="list-group-item">
+                      <button
+                        type="button"
+                        className="btn btn-link address-link"
+                        onClick={() => {
+                          handleUserLocationCloseModal();
+                        }}
+                      >
+                        {result.address}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Row>
+            </Modal.Body>
+
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleUserLocationCloseModal}>
+                    닫기
+                </Button>
+            </Modal.Footer>
+        </Modal>
+
     </Container>
   );
 }

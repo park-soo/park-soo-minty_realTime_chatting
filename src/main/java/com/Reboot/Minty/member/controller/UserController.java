@@ -2,6 +2,7 @@ package com.Reboot.Minty.member.controller;
 
 import com.Reboot.Minty.member.dto.*;
 import com.Reboot.Minty.member.entity.User;
+import com.Reboot.Minty.member.repository.UserLocationRepository;
 import com.Reboot.Minty.member.repository.UserRepository;
 import com.Reboot.Minty.member.service.JoinFormValidator;
 import com.Reboot.Minty.member.service.SmsService;
@@ -11,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,17 +45,18 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
 
     private final SmsService smsService;
-
     private final UserRepository userRepository;
     private final JoinFormValidator joinFormValidator;
+    private final UserLocationRepository userLocationRepository;
 
 
-    public UserController(UserService userService, PasswordEncoder passwordEncoder, SmsService smsService, UserRepository userRepository, JoinFormValidator joinFormValidator) {
+    public UserController(UserService userService, PasswordEncoder passwordEncoder, SmsService smsService, UserRepository userRepository, JoinFormValidator joinFormValidator, UserLocationRepository userLocationRepository) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.smsService = smsService;
         this.userRepository = userRepository;
         this.joinFormValidator = joinFormValidator;
+        this.userLocationRepository = userLocationRepository;
     }
 
     @GetMapping("/update")
@@ -114,13 +117,11 @@ public class UserController {
     public String joinSubmit(@Valid JoinDto joinDto, BindingResult bindingResult, Model model, HttpSession session, Errors errors) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("JoinDto", joinDto);
-            model.addAttribute("readOnly", true);
             return "member/join";
         }
         joinFormValidator.validate(joinDto, errors);
         if (errors.hasErrors()) {
             model.addAttribute("JoinDto", joinDto);
-            model.addAttribute("readOnly", true);
             return "member/join";
         }
         try {
@@ -130,18 +131,32 @@ public class UserController {
         } catch (IllegalStateException e) {
             model.addAttribute("JoinDto", joinDto);
             model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("readOnly", true);
             return "member/join";
         }
     }
 
+    @Value("${kaKao-jsKey}")
+    private String kaKaoKey;
 
     @GetMapping("/map")
-    public String getMap(HttpSession session) {
-        User user = (User)session.getAttribute("user");
-        session.setAttribute("user",user);
-        return "map/map";
+    public String getMap(HttpSession session, Model model) {
+        try {
+            User user = userRepository.findById((Long) session.getAttribute("userId"))
+                    .orElseThrow(EntityNotFoundException::new);
+            long count = userLocationRepository.countByUserId(user.getId());
+            if (count >= 3) {
+                throw new IllegalStateException("유저 지역 정보는 최대 3개까지만 가능합니다.");
+            }
+            session.setAttribute("user", user);
+            model.addAttribute("kaKaoKey", kaKaoKey);
+            return "map/map";
+        } catch (IllegalStateException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "map/map";
+        }
     }
+
+
 
 
     @PostMapping("/saveLocation")
@@ -165,9 +180,17 @@ public class UserController {
 
     @GetMapping("/api/isLoggedIn")
     @ResponseBody
-    public boolean isLoggedIn(HttpServletRequest request) {
+    public Map<String,Object> isLoggedIn(HttpServletRequest request) {
+        Map<String, Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.isAuthenticated() ? true : false;
+        boolean LoggedIn = authentication.isAuthenticated() ? true : false;
+        response.put("LoggedIn", LoggedIn);
+        if(LoggedIn){
+            HttpSession session = request.getSession();
+            String userRole = (String)session.getAttribute("userRole");
+            response.put("userRole",userRole);
+        }
+        return response;
     }
 
     @PostMapping("/sms/send")

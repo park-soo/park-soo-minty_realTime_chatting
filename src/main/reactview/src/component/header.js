@@ -6,13 +6,18 @@ import { Link } from 'react-router-dom';
 function Header({ csrfToken }) {
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userRole, setUserRole] = useState('');
     useEffect(() => {
         axios.get(`/api/isLoggedIn`).then((response) => {
-            setIsLoggedIn(response.data);
+            setIsLoggedIn(response.data.LoggedIn);
+            setUserRole(response.data.userRole);
         }).catch((e) => {
             console.error(e);
         })
-    })
+    },[]);
+
+    useEffect(() => {
+    }, [userRole]);
 
     const handleLoginClick = () => {
         setIsLoggedIn(true);
@@ -51,7 +56,7 @@ function Header({ csrfToken }) {
                             급해요
                         </a>
                         <p></p>
-                        <a href="event" className="nav-link menu-a">
+                        <a href="/event" className="nav-link menu-a">
                             이벤트
                         </a>
                         <p></p>
@@ -59,10 +64,14 @@ function Header({ csrfToken }) {
                             커뮤니티
                         </a>
                         <p></p>
-                        <a href="#quote" className="nav-link menu-a">
+                        <a href="/priceSearch" className="nav-link menu-a">
                             시세조회
                         </a>
                         <p></p>
+                        <a href="/getchatting" className="nav-link menu-a">
+                            채팅
+                       </a>
+                       <p></p>
                     </div>
                     <div className="navbar-nav d-flex flex-row gap-2">
                         <a href="/usershop" className="nav-link menu-a">
@@ -73,9 +82,12 @@ function Header({ csrfToken }) {
                             마이페이지
                         </a>
                         <p></p>
-                        <a href="/manager" className="nav-link menu-a">
-                            관리자페이지
-                        </a>
+                        {userRole==='ADMIN' ? (<>
+                            <a href="/manager" className="nav-link menu-a">
+                                                        관리자페이지
+                            </a>
+                        </>) : null}
+
                         <p></p>
                         {isLoggedIn ? (
                             <>

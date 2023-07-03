@@ -18,6 +18,7 @@ import java.util.List;
 
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
+    Trade findByBoardId(Long boardId);
 
     List<Trade> findByBuyerId_Id(Long userId);
     List<Trade> findBySellerId_Id(Long userId);
@@ -48,7 +49,7 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     @Modifying
     @Query("UPDATE Trade t SET t.buyerSchedule = :schedule WHERE t.id = :tradeId")
     void updateBuyerSchedule(@Param("tradeId") Long tradeId, @Param("schedule") String schedule);
-
+    List<Trade> findAllByTradeDateBeforeAndStatus(LocalDate tradeDate, String status);
 
     Trade findByBoardIdAndBuyerId(TradeBoard tradeBoardId, User buyer);
 }

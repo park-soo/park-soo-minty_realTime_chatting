@@ -93,7 +93,7 @@ function fetchAll() {
 
                     usersTemplateHTML = usersTemplateHTML +
                         '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch(\'' + users[i]['my'] + '\', \'' + users[i]['myNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['myNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
-                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px" class="rounded-circle">'+
+                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
                         '<div class="header" id="userNameAppender_' + users[i]['my'] + '">'+
                         '<span>'+users[i]['myNickName']+'</span>'+
                         '</div>'+
@@ -102,7 +102,7 @@ function fetchAll() {
 
                     usersTemplateHTML = usersTemplateHTML +
                         '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch(\'' + users[i]['other'] + '\', \'' + users[i]['otherNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['otherNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
-                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px" class="rounded-circle">'+
+                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
                         '<div class="header" id="userNameAppender_' + users[i]['other'] + '">'+
                         '<span>'+users[i]['otherNickName']+'</span>'+
                         '</div>'+
@@ -218,11 +218,12 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         buttonSend.parentNode.removeChild(buttonSend);
     }
 
-    let nama=$('#formMessageHeader').find('span')
+    let nama = $('#formMessageHeader').find('span#userName');
+    let nama1 = $('#formMessageHeader').find('span#title-content');
 
-    nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + name + '<div class="sell-room"><img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail +
-        '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">' +
-        "제목: " + title + '<br>' + "내용: " + content + '<br>' + "가격 :" + price + '</div>');
+    //nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + name +"제목"+ title + "가격"+price + '<img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail + '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">');
+    nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + name);
+    nama1.html('<img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail + '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">'+'<div id="title-price"><span id="title-content-title" class="truncate">' +title+ '</span>' + '<span id="title-content-price">'+ new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price) + '원</span></div>' );
 
     nama.attr("data-id",id);
     let isNew = document.getElementById("newMessage_" + id) !== null;
@@ -284,17 +285,15 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
             console.log(">>>>>>>>>>>>>>>>"+id);
             let productTemplateHTML = "";
             for (let i = 0; i < products.length; i++) {
-                //if (products[i]['my'] == userId && products[i]['other']== id) {
+                //if (products[i]['my'] == userId && products[i]['other']== id || products[i]['my'] == id && products[i]['other']== userId) {
                     productTemplateHTML += '<div class="product-item">'+
                         '<a href="http://localhost:8087/trade/' + products[i]['trade_id'] + '">' +
-                        '<img src="https://storage.googleapis.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="product-image">' + '<br>' +
-                        '<div class="product-name">'+products[i]["title"] +
-                        '</div>' +
-                        '<div class="product-price">'+products[i]["price"] +
-                        '</div>' +
+                        '<img src="https://storage.googleapis.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="product-image">' +
+                        '<div class="product-name">' + (products[i]["title"].length > 8 ? products[i]["title"].substring(0, 8) + '...' : products[i]["title"]) + '</div>' +
+                        '<div class="product-price">' + new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(products[i]["price"]) + '원</div>' +
                         '</a>' +
                         '</div>' ;
-                // } else {
+                // }else {
                 //     productTemplateHTML += '<div id="child_message" class="d-flex justify-content-end mb-4">' +
                 //         '<div id="child_message" class="msg_cotainer_send">' +
                 //         '<img src="https://storage.cloud.google.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="rounded-circle user_img">' + '<br>' +
@@ -314,7 +313,7 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
     let dataType = type;
 
     let submitButton='<div class="input-group-append" id="buttonSend">'+
-        '<button class="btn mint-background text-white" onclick="sendMessage(\''+dataType+'\')">sned</button>'+
+        '<button class="btn mint-background text-white" onclick="sendMessage(\''+dataType+'\')">▶</button>'+
         '</div>';
     $('#formSubmit').append(submitButton)
 

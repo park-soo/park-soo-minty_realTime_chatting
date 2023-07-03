@@ -7,7 +7,6 @@ import com.Reboot.Minty.chat.service.UserAndGroupService;
 import com.Reboot.Minty.member.entity.User;
 import com.Reboot.Minty.member.service.UserService;
 import jakarta.servlet.http.HttpSession;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -29,7 +28,6 @@ public class MessageController {
 
     @Autowired
     ProductsService productsService;
-
     @Autowired
     UserService userService;
 
@@ -79,7 +77,6 @@ public class MessageController {
         Long userId = (Long) session.getAttribute("userId");
         return userId;
     }
-
     @GetMapping("/getNumber")
     public String getNumber(HttpSession session) {
         User user = userService.getUserInfoById((Long) session.getAttribute("userId"));
@@ -97,6 +94,5 @@ public class MessageController {
 
         return formattedMobile;
     }
-
 
 }

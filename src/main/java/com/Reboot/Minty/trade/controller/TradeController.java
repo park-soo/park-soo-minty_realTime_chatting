@@ -1,6 +1,8 @@
 package com.Reboot.Minty.trade.controller;
 
 import com.Reboot.Minty.member.entity.User;
+import com.Reboot.Minty.member.entity.UserLocation;
+import com.Reboot.Minty.member.repository.UserLocationRepository;
 import com.Reboot.Minty.member.service.UserService;
 import com.Reboot.Minty.review.entity.Review;
 import com.Reboot.Minty.review.service.ReviewService;
@@ -14,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -36,14 +39,16 @@ public class TradeController {
 
     private final TradeBoardRepository tradeBoardRepository;
 
+    private final UserLocationRepository userLocationRepository;
     @Autowired
-    public TradeController(TradeService tradeService, TradeBoardService tradeBoardService, UserService userService, ReviewService reviewService, ScheduleRepository scheduleRepository, TradeBoardRepository tradeBoardRepository) {
+    public TradeController(TradeService tradeService, TradeBoardService tradeBoardService, UserService userService, ReviewService reviewService, ScheduleRepository scheduleRepository, TradeBoardRepository tradeBoardRepository, UserLocationRepository userLocationRepository) {
         this.tradeService = tradeService;
         this.tradeBoardService = tradeBoardService;
         this.userService = userService;
         this.reviewService = reviewService;
         this.scheduleRepository = scheduleRepository;
         this.tradeBoardRepository = tradeBoardRepository;
+        this.userLocationRepository = userLocationRepository;
     }
 
     @GetMapping("/tradeList")
@@ -58,18 +63,23 @@ public class TradeController {
         return "trade/tradeList";
     }
 
+    @Value("${kaKao-jsKey}")
+    private String kaKaoKey;
+
     @GetMapping(value = "/trade/{tradeId}")
     public String trade(@PathVariable(value = "tradeId") Long tradeId, Model model, HttpServletRequest request)  {
         HttpSession session = request.getSession();
         Long userId = (Long)session.getAttribute("userId");
         User writerId = userService.getUserInfoById(userId);
         Trade trade = tradeService.getTradeDetail(tradeId);
+        String sellArea = trade.getBoardId().getSellArea();
         String role = tradeService.getRoleForTrade(tradeId, userId);
         User buyer= userService.getUserInfoById(trade.getBuyerId().getId());
         User seller= userService.getUserInfoById(trade.getSellerId().getId());
         Review review = reviewService.getReviewByTradeIdAndWriterId(trade,writerId);
         boolean isExistReview = reviewService.existsByIdAndWriterId(trade,writerId);
-
+        model.addAttribute("kaKaoKey",kaKaoKey);
+        model.addAttribute("sellArea", sellArea);
         model.addAttribute("userId", userId);
         model.addAttribute("trade", trade);
         model.addAttribute("role",role);
@@ -81,25 +91,21 @@ public class TradeController {
         return "trade/trade";
     }
 
-//    @PostMapping("/api/purchasingReq")
-//    @ResponseBody
-//    public ResponseEntity<?> purchasingReq(@RequestBody Long tradeBoardId, HttpSession session) {
-//        try {
-//            TradeBoard tradeBoard = tradeBoardRepository.findById(tradeBoardId).orElseThrow(EntityNotFoundException::new);
-//
-//            User buyer = userService.getUserInfoById((Long) session.getAttribute("userId"));
-//            User seller = userService.getUserInfoById(tradeBoard.getUser().getId());
-//
-//            //Trade trade = tradeService.save(tradeBoard, buyer, seller);
-//
-//
-//            return ResponseEntity.ok("/trade/" + trade.getId());
-//        } catch (IllegalStateException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("/trade/"+e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
-//        }
-//    }
+    @PostMapping("/api/purchasingReq")
+    @ResponseBody
+    public ResponseEntity<?> purchasingReq(@RequestBody Long tradeBoardId, HttpSession session) {
+        try {
+            TradeBoard tradeBoard = tradeBoardRepository.findById(tradeBoardId).orElseThrow(EntityNotFoundException::new);
+            User buyer = userService.getUserInfoById((Long) session.getAttribute("userId"));
+            User seller = userService.getUserInfoById(tradeBoard.getUser().getId());
+            Trade trade = tradeService.save(tradeBoard, buyer, seller);
+            return ResponseEntity.ok("/trade/" + trade.getId());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("/trade/"+e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred.");
+        }
+    }
 
     @GetMapping(value = "tradeDetail/{tradeId}")
     public String tradtradeDetaile(@PathVariable(value = "tradeId") Long tradeId, Model model, HttpServletRequest request)  {
@@ -142,6 +148,17 @@ public class TradeController {
         String role = tradeService.getRoleForTrade(tradeId, userId);
         System.out.println(role);
         tradeService.completionTrade(tradeId ,role);
+
+        return "redirect:/trade/" + tradeId;
+    }
+
+    @PostMapping("/tradeLocation")
+    public String saveTradeLocation(@RequestParam("tradeId") Long tradeId, @RequestParam("tradeLocation") String tradeLocation){
+        try {
+            tradeService.saveTradeLocation(tradeId, tradeLocation);
+        } catch (Exception e){
+            e.getMessage();
+        }
 
         return "redirect:/trade/" + tradeId;
     }

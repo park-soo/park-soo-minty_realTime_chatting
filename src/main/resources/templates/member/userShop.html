@@ -188,6 +188,8 @@
         padding: 20px;
     }
 
+    <!--    후기-->
+
    .review-container {
         display: flex;
         justify-content: center;
@@ -1539,23 +1541,23 @@ background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
           <h2></h2>
         </div>
 
-        <div class="frame" >
-          <button class="custom-btn btn-1">첫판매성공</button>
-          <button class="custom-btn btn-2">첫구매성공</button>
-          <button class="custom-btn btn-3"><span>연락이빨라요</span></button>
-          <button class="custom-btn btn-4"><span>무료나눔천사</span></button>
-          <button class="custom-btn btn-5"><span>100일출석</span></button>
-          <button class="custom-btn btn-6"><span>200일출석</span></button>
-          <button class="custom-btn btn-7"><span>300일출석</span></button>
-          <button class="custom-btn btn-8"><span>에누리의제왕</span></button>
-          <button class="custom-btn btn-9">판매10번</button>
-          <button class="custom-btn btn-10">구매10번</button>
-          <button class="custom-btn btn-11">VIP<div class="dot"></div></button>
-          <button class="custom-btn btn-12"><span>중고거래</span><span>마스터</span></button>
-          <button class="custom-btn btn-13">민티</button>
-          <button class="custom-btn btn-14">구매100번</button>
-          <button class="custom-btn btn-15">판매100번</button>
-        </div>
+<!--        <div class="frame" >-->
+<!--          <button class="custom-btn btn-1">첫판매성공</button>-->
+<!--          <button class="custom-btn btn-2">첫구매성공</button>-->
+<!--          <button class="custom-btn btn-3"><span>연락이빨라요</span></button>-->
+<!--          <button class="custom-btn btn-4"><span>무료나눔천사</span></button>-->
+<!--          <button class="custom-btn btn-5"><span>100일출석</span></button>-->
+<!--          <button class="custom-btn btn-6"><span>200일출석</span></button>-->
+<!--          <button class="custom-btn btn-7"><span>300일출석</span></button>-->
+<!--          <button class="custom-btn btn-8"><span>에누리의제왕</span></button>-->
+<!--          <button class="custom-btn btn-9">판매10번</button>-->
+<!--          <button class="custom-btn btn-10">구매10번</button>-->
+<!--          <button class="custom-btn btn-11">VIP<div class="dot"></div></button>-->
+<!--          <button class="custom-btn btn-12"><span>중고거래</span><span>마스터</span></button>-->
+<!--          <button class="custom-btn btn-13">민티</button>-->
+<!--          <button class="custom-btn btn-14">구매100번</button>-->
+<!--          <button class="custom-btn btn-15">판매100번</button>-->
+<!--        </div>-->
 
       </div>
     </div>
@@ -1620,12 +1622,15 @@ background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
       </div>
     </div>
   </div>
+
+
   <script type="text/javascript" th:src="@{/js/userShop.js}"></script>
-  <script>
-<!-- 후기 -->
+  <script><!-- 후기 -->
 window.onload = function() {
   setTimeout(function() {
     const reviewContainers = document.getElementsByClassName('review');
+    console.log('Number of review containers:', reviewContainers.length);
+
     for (let i = 0; i < reviewContainers.length; i++) {
       const reviewContainer = reviewContainers[i];
       const reviewContentContainer = reviewContainer.querySelector('.review_content_container');
@@ -1644,30 +1649,34 @@ window.onload = function() {
       // Hide the "더 보기" button if the content height is less than the calculated height or if content has ellipsis
       if (reviewContent.scrollHeight > reviewContent.offsetHeight) {
         showMoreButton.style.display = 'flex';
+        console.log('Show more button displayed');
       } else {
         showMoreButton.style.display = 'none';
+        console.log('Show more button hidden');
       }
 
       showMoreButton.addEventListener('click', () => {
+        console.log('Show more button clicked');
+
         if (reviewContainer.classList.contains('expanded')) {
           reviewContent.style.webkitLineClamp = '5';
           showMoreButton.textContent = '더 보기';
           reviewContainer.classList.remove('expanded');
-          showMoreButton.style.top = '85px'; // 컨텐츠가 축소될 때 상단 위치 조정
+          showMoreButton.style.top = '85px'; // Adjust the top position when content is collapsed
         } else {
           reviewContent.style.webkitLineClamp = 'initial';
           reviewContentContainer.style.height = 'auto';
           showMoreButton.textContent = '접기';
           reviewContainer.classList.add('expanded');
           const contentHeight = reviewContentContainer.offsetHeight;
-          showMoreButton.style.top = contentHeight + 200 + 'px'; // 컨텐츠가 확장될 때 상단 위치 조정
+          showMoreButton.style.top = contentHeight + 200 + 'px'; // Adjust the top position when content is expanded
         }
       });
     }
-  }, 0);
+  }, 500);
 };
-
 </script>
 </div>
+
 </body>
 </html>

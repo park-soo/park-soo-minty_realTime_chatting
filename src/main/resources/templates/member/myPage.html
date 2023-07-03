@@ -664,6 +664,8 @@
 window.onload = function() {
   setTimeout(function() {
     const reviewContainers = document.getElementsByClassName('review');
+    console.log('Number of review containers:', reviewContainers.length);
+
     for (let i = 0; i < reviewContainers.length; i++) {
       const reviewContainer = reviewContainers[i];
       const reviewContentContainer = reviewContainer.querySelector('.review_content_container');
@@ -682,27 +684,31 @@ window.onload = function() {
       // Hide the "더 보기" button if the content height is less than the calculated height or if content has ellipsis
       if (reviewContent.scrollHeight > reviewContent.offsetHeight) {
         showMoreButton.style.display = 'flex';
+        console.log('Show more button displayed');
       } else {
         showMoreButton.style.display = 'none';
+        console.log('Show more button hidden');
       }
 
       showMoreButton.addEventListener('click', () => {
+        console.log('Show more button clicked');
+
         if (reviewContainer.classList.contains('expanded')) {
           reviewContent.style.webkitLineClamp = '5';
           showMoreButton.textContent = '더 보기';
           reviewContainer.classList.remove('expanded');
-          showMoreButton.style.top = '85px'; // 컨텐츠가 축소될 때 상단 위치 조정
+          showMoreButton.style.top = '85px'; // Adjust the top position when content is collapsed
         } else {
           reviewContent.style.webkitLineClamp = 'initial';
           reviewContentContainer.style.height = 'auto';
           showMoreButton.textContent = '접기';
           reviewContainer.classList.add('expanded');
           const contentHeight = reviewContentContainer.offsetHeight;
-          showMoreButton.style.top = contentHeight + 200 + 'px'; // 컨텐츠가 확장될 때 상단 위치 조정
+          showMoreButton.style.top = contentHeight + 200 + 'px'; // Adjust the top position when content is expanded
         }
       });
     }
-  }, 0);
+  }, 500);
 };
 
  </script>

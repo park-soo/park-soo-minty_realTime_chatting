@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 
-
 @Table(name = "user")
 @Builder
 @AllArgsConstructor
@@ -58,7 +57,6 @@ public class User {
     private int point;
     @Column
     private LocalDate withdrawalDate;
-
     public User(String name, String email, String ageRange, String mobile, String gender) {
         this.name = name;
         this.email = email;
@@ -83,7 +81,6 @@ public class User {
         user.setPoint(0);
         return user;
     }
-
     public void setWithdrawalDateToNow() {
         withdrawalDate = LocalDate.now();
     }
