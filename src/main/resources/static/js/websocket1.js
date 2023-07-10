@@ -89,32 +89,52 @@ function fetchAll() {
         let usersTemplateHTML = "";
         for (let i = 0; i < users.length; i++) {
             console.log(users[i]['other'])
-                if (userId==users[i]['other']){
+            if (userId==users[i]['other']){
 
-                    usersTemplateHTML = usersTemplateHTML +
-                        '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch(\'' + users[i]['my'] + '\', \'' + users[i]['myNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['myNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
-                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
-                        '<div class="header" id="userNameAppender_' + users[i]['my'] + '">'+
-                        '<span>'+users[i]['myNickName']+'</span>'+
-                        '</div>'+
-                        '</a>';
-                } else  {
+                usersTemplateHTML = usersTemplateHTML +
+                    '<a class="list-group-item list-group-item-action-a" id="child_message" onclick="formMessageLauch(\'' + users[i]['my'] + '\', \'' + users[i]['myNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['myNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
+                    '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
+                    '<div class="header" id="userNameAppender_' + users[i]['my'] + '">'+
+                    '<span>'+users[i]['myNickName']+'</span>'+
+                    '</div>'+
+                    '</a>';
+            } else  {
 
-                    usersTemplateHTML = usersTemplateHTML +
-                        '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch(\'' + users[i]['other'] + '\', \'' + users[i]['otherNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['otherNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
-                        '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
-                        '<div class="header" id="userNameAppender_' + users[i]['other'] + '">'+
-                        '<span>'+users[i]['otherNickName']+'</span>'+
-                        '</div>'+
-                        '</a>';
-                }
+                usersTemplateHTML = usersTemplateHTML +
+                    '<a class="list-group-item list-group-item-action-a" id="child_message" onclick="formMessageLauch(\'' + users[i]['other'] + '\', \'' + users[i]['otherNickName'] + '\', \'user\', \'' + users[i]['title'] + '\', \'' + users[i]['content'] + '\', \'' + users[i]['price'] + '\', \'' + users[i]['thumbnail'] + '\')" data-userid="' + users[i]['otherNickName'] + '" data-type="user" data-thumbnail="' + users[i]['thumbnail'] + '" data-title="' + users[i]['title'] + '" data-content="' + users[i]['content'] + '" data-price="' + users[i]['price'] + '">' +
+                    '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
+                    '<div class="header" id="userNameAppender_' + users[i]['other'] + '">'+
+                    '<span>'+users[i]['otherNickName']+'</span>'+
+                    '</div>'+
+                    '</a>';
+            }
         }
         $('#chat-users').html(usersTemplateHTML);
         // 채팅 목록 로딩 후 첫 번째 채팅방 클릭
-        $($('.list-group-item.list-group-item-action')[0]).click();
+        $($('.list-group-item.list-group-item-action-a')[0]).click();
     });
-}
 
+    $.get(url + "/fetchAllGroups/"+userId, function (response) {
+        let groups = response;
+        console.log(groups);
+        let groupsTemplateHTML = "";
+        for (let i = 0; i < groups.length; i++) {
+            console.log(groups[i]['user_id'])
+            groupsTemplateHTML = groupsTemplateHTML +
+                '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch('+groups[i]['user_id']+',\''+groups[i]['address']+'\',\'group\')" data-groupid="'+groups[i]['user_id']+'" data-type="group">'+
+                '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
+                '<div class="user_info" id="userGroupAppender_' + groups[i]['user_id'] + '">'+
+                // '<span>'+groups[i]['address']+'</span>'+
+                '<span>'+"지역 채팅방"+'</span>'+
+                '</div>'+
+                '</a>';
+        }
+        $('#groupList').html(groupsTemplateHTML);
+        $($('.list-group-item.list-group-item-action-a')[0]).click();
+
+    });
+
+}
 
 
 function sendMsgUser(from, text) {
@@ -122,9 +142,15 @@ function sendMsgUser(from, text) {
         fromLogin: from,
         message: text
     }));
-
-
 }
+
+function sendMsgGroup(from, text) {
+    stompClient.send("/app/chat/group/" + selectedUserOrGrup, {}, JSON.stringify({
+        fromLogin: from,
+        message: text
+    }));
+}
+
 
 function sendImageMessage(imagePath, type) {
     let userId = localStorage.getItem("userId");
@@ -132,8 +158,9 @@ function sendImageMessage(imagePath, type) {
         console.log(imagePath);
         console.log(type);
         console.log(imagePath);
-
         sendMsgUser(userId, imagePath);
+    } else if (type === "group") {
+        sendMsgGroup(userId, imagePath);
     }
 
     let messageTemplateHTML = "";
@@ -156,8 +183,8 @@ function sendNumberMessage(number,type) {
 
     if(type==="user"){
         sendMsgUser(userId, number);
-    }else if(type==="group"){
-        sendMsgGroup(userId, number);
+    } else if (type === "group"){
+        alert("지역채팅방에서는 전화번호 공유가 불가 합니다.");
     }
 
     let messageTemplateHTML = "";
@@ -218,19 +245,41 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         buttonSend.parentNode.removeChild(buttonSend);
     }
 
+    let imageAndNumber = document.getElementById("imageAndNumber");
+    if(imageAndNumber!==null){
+        imageAndNumber.parentNode.removeChild(imageAndNumber);
+    }
+
+
     let nama = $('#formMessageHeader').find('span#userName');
     let nama1 = $('#formMessageHeader').find('span#title-content');
 
-    //nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + name +"제목"+ title + "가격"+price + '<img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail + '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">');
+    if (type === "user") {
     nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + name);
     nama1.html('<img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail + '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">'+'<div id="title-price"><span id="title-content-title" class="truncate">' +title+ '</span>' + '<span id="title-content-price">'+ new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price) + '원</span></div>' );
-
     nama.attr("data-id",id);
+
+    nama1.show();
+    document.getElementById("formProductsBody").style.display = 'block';
+    document.getElementById("formMessageHeader").style.borderBottom = 'none';
+
+
+    } else if ((type === "group")) {
+
+        nama.html('<a href="#"><img src="https://via.placeholder.com/50" alt="Selected User Image" class="rounded-circle me-2"></a>' + "지역 채팅방");
+        nama.attr("data-id",name);
+
+    nama1.html(name);
+    document.getElementById("formProductsBody").style.display = 'none';
+    document.getElementById("formMessageHeader").style.borderBottom = '3px solid grey';
+    document.getElementById("formMessageHeader").style.paddingBottom = '10px';
+
+    }
+
     let isNew = document.getElementById("newMessage_" + id) !== null;
     if (isNew) {
         let element = document.getElementById("newMessage_" + id);
         element.parentNode.removeChild(element);
-
 
     }
     let username = $('#userName').attr("data-id");
@@ -246,26 +295,26 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
 
 
     var userId = localStorage.getItem("userId");
-    if(type==="user"){
-        $.get(url + "/listmessage/"+userId+"/"+id, function (response) {
+    if(type==="user") {
+        $.get(url + "/listmessage/" + userId + "/" + id, function (response) {
 
             let messages = response;
             let messageTemplateHTML = "";
             for (let i = 0; i < messages.length; i++) {
 
                 let content = messages[i]["message_text"].endsWith("images")
-                    ?  '<a href="https://storage.googleapis.com/reboot-minty-storage/' + messages[i]["message_text"] + '" target="_blank"><img src="https://storage.googleapis.com/reboot-minty-storage/' + messages[i]["message_text"] + '" alt="이미지" width="100px" height="100px"/></a>'
+                    ? '<a href="https://storage.googleapis.com/reboot-minty-storage/' + messages[i]["message_text"] + '" target="_blank"><img src="https://storage.googleapis.com/reboot-minty-storage/' + messages[i]["message_text"] + '" alt="이미지" width="100px" height="100px"/></a>'
                     : messages[i]["message_text"];
 
-                if(messages[i]['message_from']==userId){
-                    messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-end mb-2">'+
-                        '<div id="child_message" class="col-auto chat_message my_chat">'+ '<p>'+content+'</p>' +
-                        '</div>'+
+                if (messages[i]['message_from'] == userId) {
+                    messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-end mb-2">' +
+                        '<div id="child_message" class="col-auto chat_message my_chat">' + '<p>' + content + '</p>' +
+                        '</div>' +
                         '</div>';
-                }else{
-                    messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-start mb-2">'+
-                        '<div id="child_message" class="col-auto chat_message their_chat">'+'<p>'+content+'</p>'+
-                        '</div>'+
+                } else {
+                    messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-start mb-2">' +
+                        '<div id="child_message" class="col-auto chat_message their_chat">' + '<p>' + content + '</p>' +
+                        '</div>' +
                         '</div>';
                 }
 
@@ -277,45 +326,69 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         });
 
 
-        $.get(url + "/listProducts/" + userId + "/" + id, function(response) {
+        $.get(url + "/listProducts/" + userId + "/" + id, function (response) {
             scrollToBottom();
             let products = response;
             console.log(products);
-            console.log(">>>>>>>>>>>>>>>>>"+userId);
-            console.log(">>>>>>>>>>>>>>>>"+id);
+            console.log(">>>>>>>>>>>>>>>>>" + userId);
+            console.log(">>>>>>>>>>>>>>>>" + id);
             let productTemplateHTML = "";
             for (let i = 0; i < products.length; i++) {
                 //if (products[i]['my'] == userId && products[i]['other']== id || products[i]['my'] == id && products[i]['other']== userId) {
-                    productTemplateHTML += '<div class="product-item">'+
-                        '<a href="http://localhost:8087/trade/' + products[i]['trade_id'] + '">' +
-                        '<img src="https://storage.googleapis.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="product-image">' +
-                        '<div class="product-name">' + (products[i]["title"].length > 8 ? products[i]["title"].substring(0, 8) + '...' : products[i]["title"]) + '</div>' +
-                        '<div class="product-price">' + new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(products[i]["price"]) + '원</div>' +
-                        '</a>' +
-                        '</div>' ;
-                // }else {
-                //     productTemplateHTML += '<div id="child_message" class="d-flex justify-content-end mb-4">' +
-                //         '<div id="child_message" class="msg_cotainer_send">' +
-                //         '<img src="https://storage.cloud.google.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="rounded-circle user_img">' + '<br>' +
-                //         products[i]['title'] + '<br>' +
-                //         products[i]['content'] + '<br>' +
-                //         products[i]['price'] + '<br>' +
-                //         '</div>' +
-                //         '</div>';
-                // }
+                productTemplateHTML += '<div class="product-item">' +
+                    '<a href="http://localhost:8087/trade/' + products[i]['trade_id'] + '">' +
+                    '<img src="https://storage.googleapis.com/reboot-minty-storage/' + products[i]['thumbnail'] + '" alt="Thumbnail" class="product-image">' +
+                    '<div class="product-name">' + (products[i]["title"].length > 8 ? products[i]["title"].substring(0, 8) + '...' : products[i]["title"]) + '</div>' +
+                    '<div class="product-price">' + new Intl.NumberFormat('ko-KR', {
+                        style: 'currency',
+                        currency: 'KRW'
+                    }).format(products[i]["price"]) + '원</div>' +
+                    '</a>' +
+                    '</div>';
             }
             $('#formProductsBody').append(productTemplateHTML);
             scrollToBottom(); // 스크롤을 아래로 이동
         });
 
-    }
+    }else if(type==="group"){
+            $.get(url + "/listmessage/group/"+name, function (response) {
+                let messagesGroup = response;
+                console.log(messagesGroup);
+                let messageGroupTemplateHTML = "";
+                for (let i = 0; i < messagesGroup.length; i++) {
+                    // console.log(messagesGroup[i]['messages'])
+                    let content = messagesGroup[i]["messages"].endsWith("images")
+                        ?  '<a href="https://storage.googleapis.com/reboot-minty-storage/' + messagesGroup[i]["messages"] + '" target="_blank"><img src="https://storage.googleapis.com/reboot-minty-storage/' + messagesGroup[i]["messages"] + '" alt="이미지" width="100px" height="100px"/></a>'
+                        : messagesGroup[i]["messages"];
+
+                    if(messagesGroup[i]['user_id']==userId){
+                        messageGroupTemplateHTML = messageGroupTemplateHTML + '<div id="child_message" class="row justify-content-end mb-2">'+
+                            '<div id="child_message" class="col-auto chat_message my_chat">'+ '<p>'+content+'</p>' +
+                            '</div>'+
+                            '</div>';
+                    }else{
+                        messageGroupTemplateHTML = messageGroupTemplateHTML + '<div id="child_message" class="row justify-content-start mb-2">'+
+                            '<div id="child_message" class="col-auto chat_message their_chat">'+'<p>'+content+'</p>'+
+                            '</div>'+
+                            '<p>'+messagesGroup[i]['nick_name']+'</>' +
+                            '</div>';
+                    }
+
+                }
+                $('#chat-body').append(messageGroupTemplateHTML);
+                scrollToBottom(); // 스크롤을 아래로 이동
+
+            });
+
+        }
 
     let dataType = type;
-
-    let submitButton='<div class="input-group-append" id="buttonSend">'+
+    console.log(dataType);
+    let submitButton=
+        '<div class="input-group-append" id="buttonSend">'+
         '<button class="btn mint-background text-white" onclick="sendMessage(\''+dataType+'\')">▶</button>'+
         '</div>';
-    $('#formSubmit').append(submitButton)
+    $('#formSubmit').append(submitButton);
 
     $('#chat-input').on('keydown', function (e) {
         if (e.key === 'Enter') {
@@ -325,10 +398,20 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         }
     });
 
+        let ImageAndNumber =
+            '<div class="input-group-prepend" id="imageAndNumber">' +
+            '<input type="file" id="imageFile" accept="image/*" onchange="uploadImage(\'' + dataType + '\')" hidden>' +
+            '<label for="imageFile" class="input-group-text mint-border mint-background"><i class="fas fa-paperclip" style="color: white;"></i></label>' +
+            '<input type="button" id="call-icon" onclick="getNumber(\'' + dataType + '\')" hidden>' +
+            '<label for="call-icon" class="input-group-text mint-border mint-background"><i class="fas fa-phone" style="color: white;"></i></label>' +
+            '</div>';
+        $('#imageAndNumber').append(ImageAndNumber);
+
 }
 
+
 function back(){
-history.back();
+    history.back();
 
 }
 
@@ -341,7 +424,8 @@ function scrollToBottom() {
     messageContainer.scrollTop(messageContainer[0].scrollHeight);
 }
 
-function uploadImage() {
+function uploadImage(type) {
+    console.log(type);
     let imageFile = document.getElementById('imageFile').files[0];
     if (!imageFile) {
         alert("이미지 파일을 선택하세요.");
@@ -366,7 +450,7 @@ function uploadImage() {
         },
         success: function(response) {
             console.log(response);
-            sendImageMessage(response, "user");
+            sendImageMessage(response, type);
         },
         error: function(error) {
             console.log(error);
@@ -374,7 +458,8 @@ function uploadImage() {
     });
 }
 
-function getNumber() {
+function getNumber(type) {
+    console.log(type);
     var confirmation = confirm("전화번호를 채팅방에 표시 하시겠습니까?");
     if (confirmation) {
 
@@ -384,7 +469,7 @@ function getNumber() {
             dataType: "text",
             success: function(response) {
                 console.log(response);
-                sendNumberMessage(response, "user");
+                sendNumberMessage(response, type);
 
             },
             error: function() {
