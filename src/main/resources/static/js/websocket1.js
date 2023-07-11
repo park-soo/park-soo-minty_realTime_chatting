@@ -185,6 +185,7 @@ function sendNumberMessage(number,type) {
         sendMsgUser(userId, number);
     } else if (type === "group"){
         alert("지역채팅방에서는 전화번호 공유가 불가 합니다.");
+        return;
     }
 
     let messageTemplateHTML = "";
@@ -405,7 +406,7 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
             '<input type="button" id="call-icon" onclick="getNumber(\'' + dataType + '\')" hidden>' +
             '<label for="call-icon" class="input-group-text mint-border mint-background"><i class="fas fa-phone" style="color: white;"></i></label>' +
             '</div>';
-        $('#imageAndNumber').append(ImageAndNumber);
+        $('#ImageAndNumber').append(ImageAndNumber);
 
 }
 
