@@ -44,9 +44,20 @@ public class MessageService {
 
     public void sendMessageGroup(String to, MessageGroupDTO message) {
 
+
         jdbcTemplate.update("INSERT INTO `group_messages`(`address`, `user_id`, `messages`, `created_date_time`) " +
                 "VALUES (?,?,?,current_timestamp )",to,message.getFromLogin(),message.getMessage());
+
+
         message.setAddress(to);
+
+        String nickName = jdbcTemplate.queryForObject(
+                "SELECT u.nick_name FROM user u JOIN group_messages g ON u.id = g.user_id WHERE g.user_id = ? ORDER BY g.created_date_time DESC LIMIT 1",
+                new Object[]{message.getFromLogin()},
+                String.class
+        );
+
+        message.setNick_name(nickName);
         simpMessagingTemplate.convertAndSend("/topic/messages/group/" + to, message);
 
     }

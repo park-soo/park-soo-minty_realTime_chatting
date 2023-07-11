@@ -59,7 +59,7 @@ public class UserAndGroupService {
 
 
     public List<Map<String,Object>> fetchAllGroup(String groupId) {
-        List<Map<String, Object>> addresses = jdbcTemplate.queryForList("SELECT ul.address, ul.user_id FROM user_location ul WHERE ul.user_id = ?", groupId);
+        List<Map<String, Object>> addresses = jdbcTemplate.queryForList("SELECT ul.address, ul.user_id, u.nick_name FROM user_location ul JOIN user u ON ul.user_id = u.id WHERE ul.user_id = ?", groupId);
 
         return addresses;
     }

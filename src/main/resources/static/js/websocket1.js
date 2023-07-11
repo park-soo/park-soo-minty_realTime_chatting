@@ -58,7 +58,64 @@ function connectToChat(userName) {                                  // userId
                     '</div>';
                 console.log("append success")
             }
+
         },{});
+
+        $.get(url + "/fetchAllGroups/"+userName, function (response) {
+            console.log(userName);
+            let groups = response;
+            console.log(groups);
+            for (let i = 0; i < groups.length; i++) {
+                // console.log(groups[i]['name'])
+                stompClient.subscribe("/topic/messages/group/" + groups[i]["address"], function (response) {
+                    let data = JSON.parse(response.body);
+                    console.log(data);
+                    console.log("selectedUserOrGrup = "+selectedUserOrGrup)
+                    console.log("data.address = "+data.address)
+                    console.log("data.nick_name = "+data.nick_name)
+                    console.log("------------------------------------ : masuk get message group")
+                    if (selectedUserOrGrup === data.address && groups[i]["user_id"] !== data.fromLogin ) {
+                        console.log("selectedUserOrGrup === data.fromLogin")
+
+                        let messageTemplateHTML = "";
+                        messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-start mb-2">'+
+                            '<div id="child_message" class="col-auto chat_message their_chat">'+'<p>'+ data.message +'</p>' +
+                            '<span>'+ data.nick_name +'</span>' +
+                            '</div>' +
+                            '</div>';
+                        $('#chat-body').append(messageTemplateHTML);
+                        scrollToBottom(); // 스크롤을 아래로 이동
+                        console.log("append success")
+                    } else {
+                        newMessages.set(data.fromLogin, data.message);
+
+                        var modifiedAddress = data.address.replace(/\s+/g, '-');
+                        // 기존에 있는 '+1' span 요소를 찾습니다.
+                        var newMessageElemGroup = $('#newMessage_' + modifiedAddress);
+
+                        if (newMessageElemGroup.length) {
+                            // span 요소가 이미 존재하면, 현재 카운트를 증가시키고 값을 업데이트합니다.
+                            var currentCount = parseInt(newMessageElemGroup.text(), 10);
+                            newMessageElemGroup.text('+' + (currentCount + 1));
+                        } else {
+                            // span 요소가 없으면, 새로운 요소를 생성하고 '+1' 값을 설정합니다.
+                            $('#userGroupAppender_' + modifiedAddress).append('<span id="newMessage_' + modifiedAddress + '" style="color: red">+1</span>');
+
+                        }
+
+                        console.log("kebuat")
+                        let messageTemplateHTML = "";
+                        messageTemplateHTML = messageTemplateHTML + '<div id="child_message" class="row justify-content-end mb-2">'+
+                            '<div class="col-auto chat_message their_chat">'+'<p>'+ data.message +'</p>' +
+                            '</div>' +
+                            '</div>';
+                        console.log("append success")
+                    }
+                })
+            }
+
+
+        });
 
 
     },onError);
@@ -115,15 +172,17 @@ function fetchAll() {
     });
 
     $.get(url + "/fetchAllGroups/"+userId, function (response) {
+
         let groups = response;
         console.log(groups);
         let groupsTemplateHTML = "";
         for (let i = 0; i < groups.length; i++) {
+            var modifiedAddress = groups[i]['address'].replace(/\s+/g, '-');
             console.log(groups[i]['user_id'])
             groupsTemplateHTML = groupsTemplateHTML +
                 '<a class="list-group-item list-group-item-action" id="child_message" onclick="formMessageLauch('+groups[i]['user_id']+',\''+groups[i]['address']+'\',\'group\')" data-groupid="'+groups[i]['user_id']+'" data-type="group">'+
                 '<img src="https://via.placeholder.com/50" alt="User Image" width="50px" height="50px">'+
-                '<div class="user_info" id="userGroupAppender_' + groups[i]['user_id'] + '">'+
+                '<div class="user_info" id="userGroupAppender_' + modifiedAddress + '">'+
                 // '<span>'+groups[i]['address']+'</span>'+
                 '<span>'+"지역 채팅방"+'</span>'+
                 '</div>'+
@@ -283,6 +342,18 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         element.parentNode.removeChild(element);
 
     }
+
+    var modifiedName = name.replace(/\s+/g, '-');
+    let isNewGroup = document.getElementById("newMessage_" + modifiedName) !== null;
+    if (isNewGroup) {
+        let element = document.getElementById("newMessage_" + modifiedName);
+        element.parentNode.removeChild(element);
+
+    }
+
+
+
+
     let username = $('#userName').attr("data-id");
     selectedUserOrGrup=username;
     console.log(username);
@@ -370,8 +441,8 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
                     }else{
                         messageGroupTemplateHTML = messageGroupTemplateHTML + '<div id="child_message" class="row justify-content-start mb-2">'+
                             '<div id="child_message" class="col-auto chat_message their_chat">'+'<p>'+content+'</p>'+
+                            '<span>'+messagesGroup[i]['nick_name']+'</span>' +
                             '</div>'+
-                            '<p>'+messagesGroup[i]['nick_name']+'</>' +
                             '</div>';
                     }
 
@@ -384,6 +455,7 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
         }
 
     let dataType = type;
+
     console.log(dataType);
     let submitButton=
         '<div class="input-group-append" id="buttonSend">'+
@@ -394,7 +466,9 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail){
     $('#chat-input').on('keydown', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            sendMessage(dataType); // 이 줄 수정
+            // buttonSend 클릭 이벤트를 트리거
+            $('#buttonSend button').click();
+
             $('#chat-input').val(''); // 엔터키를 눌렀을 때 입력 필드 초기화
         }
     });
