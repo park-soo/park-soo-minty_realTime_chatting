@@ -327,7 +327,7 @@ function formMessageLauch(id,name,type,title,content,price,thumbnail,profile){
     let nama1 = $('#formMessageHeader').find('span#title-content');
 
     if (type === "user") {
-    nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://storage.googleapis.com/reboot-minty-storage/' + profile + '" alt="Selected User Image" class="rounded-circle me-2"></a>' + name);
+    nama.html('<a href="http://localhost:8087/usershop/' + id + '"><img src="https://storage.googleapis.com/reboot-minty-storage/' + profile + '" alt="Selected User Image" class="rounded-circle me-2"  width="50px" height="50px"></a>' + name);
     nama1.html('<img src="https://storage.googleapis.com/reboot-minty-storage/' + thumbnail + '" alt="Thumbnail" class="rounded-circle user_img" width="50px" height="50px">'+'<div id="title-price"><span id="title-content-title" class="truncate">' +title+ '</span>' + '<span id="title-content-price">'+ new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price) + '원</span></div>' );
     nama.attr("data-id",id);
 
