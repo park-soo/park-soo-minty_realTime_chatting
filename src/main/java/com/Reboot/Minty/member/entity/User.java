@@ -43,6 +43,9 @@ public class User {
     @Column(nullable = false, name = "mobile")
     private String mobile;
 
+    @Column(name = "image")
+    private String image;
+
     @Column(nullable = false, name = "gender")
     private String gender;
 
