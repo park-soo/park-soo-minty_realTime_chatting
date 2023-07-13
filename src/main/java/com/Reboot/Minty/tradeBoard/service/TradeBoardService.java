@@ -2,6 +2,7 @@ package com.Reboot.Minty.tradeBoard.service;
 
 import com.Reboot.Minty.config.ResizeFile;
 import com.Reboot.Minty.member.dto.UserLocationResponseDto;
+import com.Reboot.Minty.member.dto.UserResponseDto;
 import com.Reboot.Minty.member.entity.User;
 import com.Reboot.Minty.member.entity.UserLocation;
 import com.Reboot.Minty.member.repository.UserLocationRepository;
@@ -10,10 +11,11 @@ import com.Reboot.Minty.tradeBoard.constant.TradeStatus;
 import com.Reboot.Minty.tradeBoard.dto.*;
 import com.Reboot.Minty.tradeBoard.entity.TradeBoard;
 import com.Reboot.Minty.tradeBoard.entity.TradeBoardImg;
-//import com.Reboot.Minty.tradeBoard.repository.TradeBoardCustomRepository;
+import com.Reboot.Minty.tradeBoard.entity.WishLike;
 import com.Reboot.Minty.tradeBoard.repository.TradeBoardCustomRepository;
 import com.Reboot.Minty.tradeBoard.repository.TradeBoardImgRepository;
 import com.Reboot.Minty.tradeBoard.repository.TradeBoardRepository;
+import com.Reboot.Minty.tradeBoard.repository.WishLikeRepository;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -27,8 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +49,10 @@ public class TradeBoardService {
     private final UserLocationRepository userLocationRepository;
 
     private final TradeBoardCustomRepository tradeBoardCustomRepository;
+
+    private final WishLikeRepository wishLikeRepository;
+
+
     @Autowired
     private Storage storage;
 
@@ -53,12 +60,13 @@ public class TradeBoardService {
 
 
     @Autowired
-    public TradeBoardService(TradeBoardRepository tradeBoardRepository, TradeBoardImgRepository tradeBoardImgRepository, UserRepository userRepository, UserLocationRepository userLocationRepository, TradeBoardCustomRepository tradeBoardCustomRepository) {
+    public TradeBoardService(TradeBoardRepository tradeBoardRepository, TradeBoardImgRepository tradeBoardImgRepository, UserRepository userRepository, UserLocationRepository userLocationRepository, TradeBoardCustomRepository tradeBoardCustomRepository, WishLikeRepository wishLikeRepository) {
         this.tradeBoardRepository = tradeBoardRepository;
         this.tradeBoardImgRepository = tradeBoardImgRepository;
         this.userRepository = userRepository;
         this.userLocationRepository = userLocationRepository;
         this.tradeBoardCustomRepository = tradeBoardCustomRepository;
+        this.wishLikeRepository = wishLikeRepository;
     }
 
     public Slice<TradeBoardDto> getTradeBoard(TradeBoardSearchDto tradeBoardSearchDto, Pageable pageable){
@@ -260,7 +268,56 @@ public class TradeBoardService {
 
     public List<UserLocationResponseDto> getLogginedLocationList(Long userId){
         List<UserLocation> userLocations = userLocationRepository.findAllByUserId(userId);
+        UserResponseDto userResponseDto = UserResponseDto.of(userRepository.findById(userId).orElseThrow(EntityNotFoundException::new));
         List<UserLocationResponseDto> response = userLocations.stream().map(UserLocationResponseDto::of).collect(Collectors.toList());
+        for(UserLocationResponseDto r : response){
+            System.out.println(r.getLatitude().getClass().getSimpleName());
+            r.setUserId(userResponseDto);
+        }
         return response;
+    }
+    public List<TradeBoardDto> getTradeBoardListByUser(Long userId) {
+        List<TradeBoard> tradeBoards = tradeBoardRepository.findByUserId(userId);
+
+        List<TradeBoardDto> tradeBoardDtos = new ArrayList<>();
+        for (TradeBoard tradeBoard : tradeBoards) {
+            TradeBoardDto tradeBoardDto = new TradeBoardDto();
+            tradeBoardDto.setTitle(tradeBoard.getTitle());
+            tradeBoardDto.setPrice(tradeBoard.getPrice());
+            tradeBoardDto.setThumbnail(tradeBoard.getThumbnail());
+            tradeBoardDto.setCreatedDate(tradeBoard.getCreatedDate());
+
+            tradeBoardDtos.add(tradeBoardDto);
+        }
+
+        return tradeBoardDtos;
+    }
+
+
+    public void like(WishLikeRequestDto requestDto, Boolean like) {
+
+        User userId = requestDto.getUserId();
+        TradeBoard tradeBoardId = requestDto.getPostId();
+
+        TradeBoard tradeBoard = tradeBoardRepository.findById(requestDto.getPostId().getId())
+                .orElseThrow(() -> new RuntimeException("게시물이 존재하지 않습니다."));
+
+        if (like) {
+            tradeBoard.setInteresting(tradeBoard.getInteresting() + 1);
+        } else {
+            tradeBoard.setInteresting(tradeBoard.getInteresting() - 1);
+        }
+
+        tradeBoardRepository.save(tradeBoard);
+
+        WishLike existingWishLike = wishLikeRepository.findByTradeBoardAndUser(tradeBoardId, userId)
+                .orElse(new WishLike());
+
+        existingWishLike.setUser(userId);
+        existingWishLike.setTradeBoard(tradeBoardId);
+        existingWishLike.setWish(like);
+
+        wishLikeRepository.save(existingWishLike);
+
     }
 }

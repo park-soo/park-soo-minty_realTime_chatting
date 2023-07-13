@@ -43,11 +43,11 @@ public class User {
     @Column(nullable = false, name = "mobile")
     private String mobile;
 
-    @Column(name = "image")
-    private String image;
-
     @Column(nullable = false, name = "gender")
     private String gender;
+
+    @Column
+    private String image;
 
     // 레벨, 경험치, 잔액 추가
     @Column(nullable = false, name = "level")

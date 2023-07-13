@@ -60,7 +60,7 @@ function Header({ csrfToken }) {
                             이벤트
                         </a>
                         <p></p>
-                        <a href="#community" className="nav-link menu-a">
+                        <a href="/communityList" className="nav-link menu-a">
                             커뮤니티
                         </a>
                         <p></p>
