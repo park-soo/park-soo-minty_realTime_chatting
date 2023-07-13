@@ -11,6 +11,7 @@ import com.Reboot.Minty.member.repository.UserLocationRepository;
 import com.Reboot.Minty.member.service.UserService;
 import com.Reboot.Minty.tradeBoard.dto.*;
 import com.Reboot.Minty.tradeBoard.entity.TradeBoard;
+import com.Reboot.Minty.tradeBoard.entity.WishLike;
 import com.Reboot.Minty.tradeBoard.repository.TradeBoardRepository;
 import com.Reboot.Minty.tradeBoard.service.TradeBoardService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -192,11 +193,18 @@ public class TradeBoardController {
     public ResponseEntity<?> getDetail(@PathVariable("boardId") Long boardId, HttpServletRequest request) {
 
         try {
+            HttpSession session = request.getSession();
             TradeBoardDetailDto tradeBoard = tradeBoardService.findById(boardId);
             List<TradeBoardImgDto> imageList = tradeBoardService.getImgList(boardId);
 
+
+            Long userId= (Long) session.getAttribute("userId");
+            System.out.println("로그인한 유저 아이디: " + userId);
+            System.out.println("보드 아이디 : " + boardId);
+            boolean wish = tradeBoardService.getWish(boardId,userId);
+            System.out.println("이까지 됐나????????"+wish);
+
             String nickName = tradeBoard.getUser().getNickName();
-            HttpSession session = request.getSession();
             boolean isAuthor = tradeBoard.getUser().getEmail().equals(session.getAttribute("userEmail"));
             System.out.println("isAuthor>>" + isAuthor);
             System.out.println(nickName);
@@ -205,6 +213,8 @@ public class TradeBoardController {
             response.setTradeBoard(tradeBoard);
             response.setNickName(nickName);
             response.setImageList(imageList);
+            response.setWish(wish);
+
             return ResponseEntity.ok().body(response);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());

@@ -16,7 +16,7 @@ function BoardDetail({ csrfToken }) {
   const [nickName, setNickName] = useState('');
   const [showModal, setShowModal] = useState(false); // Modal 표시 여부 상태
   const { id } = useParams();
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState();
 
 
     const navigate = useNavigate();
@@ -53,6 +53,8 @@ const fetchData = () => {
         setNickName(response.data.nickName);
         setImageList(list);
         setIsAuthor(response.data.author);
+        setIsLiked(response.data.wish);
+
       } else {
         alert("알 수 없는 오류");
         window.history.back(); // 이전 페이지로 이동
@@ -72,6 +74,7 @@ const fetchData = () => {
 
   useEffect(() => {
     fetchData();
+
   }, []);
 
   let timeAgo = '';
@@ -114,16 +117,16 @@ const fetchData = () => {
     const handleLikeClick = () => {
         if (!isLiked) {
             // 기존 찜하기 상태가 아니면 interesting 카운트 1 증가
-            setTradeBoard((prevTradeBoard) => ({
-                ...prevTradeBoard,
-                interesting: prevTradeBoard.interesting + 1,
+            setTradeBoard(() => ({
+                ...tradeBoard,
+                interesting: tradeBoard.interesting + 1,
             }));
             setIsLiked(true);
         } else {
             // 기존 찜하기 상태면 interesting 카운트 1 감소
-            setTradeBoard((prevTradeBoard) => ({
-                ...prevTradeBoard,
-                interesting: prevTradeBoard.interesting - 1,
+            setTradeBoard(() => ({
+                ...tradeBoard,
+                interesting: tradeBoard.interesting - 1,
             }));
             setIsLiked(false);
         }

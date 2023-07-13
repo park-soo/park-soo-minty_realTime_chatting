@@ -24,7 +24,7 @@ public class WishLike {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TradeBoard", nullable = false)
-    private TradeBoard TradeBoard;
+    private TradeBoard tradeBoard;
 
     @Column(nullable = false)
     private boolean wish;

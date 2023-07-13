@@ -80,6 +80,10 @@ public class TradeBoardService {
 
     public TradeBoardDetailDto findById(Long boardId) {
         TradeBoard tradeBoard = tradeBoardRepository.findById(boardId).orElseThrow(EntityNotFoundException::new);
+
+        tradeBoard.setVisit_count(tradeBoard.getVisit_count()+1);
+        tradeBoardRepository.save(tradeBoard);
+
         TradeBoardDetailDto dto = TradeBoardDetailDto.of(tradeBoard);
         System.out.println("of TradeBoardDetailDto" + dto.getTopCategory());
         if(dto.getTradeStatus().equals(TradeStatus.BANNED)||dto.getTradeStatus().equals(TradeStatus.DELETING)){
@@ -319,5 +323,34 @@ public class TradeBoardService {
 
         wishLikeRepository.save(existingWishLike);
 
+    }
+
+    public boolean getWish(Long boardId,Long userId) {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>들어옴?");
+        System.out.println(boardId+"   "+userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        TradeBoard tradeBoard =  tradeBoardRepository.findById(boardId).orElseThrow(EntityNotFoundException::new);
+
+        System.out.println(")))))))))))))))))))))))))))))))))))");
+        System.out.println(user.getId());
+        System.out.println(tradeBoard.getId());
+
+        //WishLike wishLike = wishLikeRepository.findByUserAndTradeBoard(user,tradeBoard);
+
+        WishLike existingWishLike = wishLikeRepository.findByTradeBoardAndUser(tradeBoard, user)
+                .orElse(new WishLike());
+
+        existingWishLike.setUser(user);
+        existingWishLike.setTradeBoard(tradeBoard);
+        existingWishLike.setWish(existingWishLike.isWish());
+        wishLikeRepository.save(existingWishLike);
+
+        System.out.println(existingWishLike.isWish());
+
+        boolean wish = existingWishLike.isWish();
+
+        return wish;
     }
 }
